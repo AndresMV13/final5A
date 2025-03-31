@@ -43,15 +43,19 @@ class LoginForm extends Model
      * @param array $params the additional name-value pairs given in the rule
      */
     public function validatePassword($attribute, $params)
-    {
-        if (!$this->hasErrors()) {
-            $user= $this->getUser();
+{
+    if (!$this->hasErrors()) {
+        // Obtener el usuario según el correo proporcionado
+        $user = $this->getUser();
 
-            if ($user->validatePassword($this->password)) {
-                $this->addError($attribute, 'Incorrect username or password.');
-            }
+        // Verificar si el usuario no existe o si la contraseña es incorrecta
+        if (!$user || !$user->validatePassword($this->correo, $this->password)) {
+            $this->addError($attribute, 'Incorrect username or password.');
         }
     }
+}
+
+
 
     /**
      * Logs in a user using the provided username and password.

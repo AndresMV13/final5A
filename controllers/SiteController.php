@@ -10,6 +10,8 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\User;
+use app\models\PasswordResetRequestForm;
+use app\models\ResetPasswordForm;
 
 class SiteController extends Controller
 {
@@ -52,8 +54,53 @@ class SiteController extends Controller
                 'class' => 'yii\captcha\CaptchaAction',
                 'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
             ],
+            'request-password-reset' => [
+            'class' => 'yii\web\ErrorAction',
+        ],
+        'reset-password' => [
+            'class' => 'yii\web\ErrorAction',
+        ],
         ];
+
+        
     }
+
+    public function actionRequestPasswordReset()
+{
+    $model = new \app\models\PasswordResetRequestForm();
+    
+    if ($model->load(Yii::$app->request->post())) {
+        if ($model->validate()) {
+            if ($model->sendEmail()) {
+                Yii::$app->session->setFlash('success', 'Revise su correo electrónico.');
+                return $this->goHome();
+            }
+        }
+    }
+    
+    // PASA EXPLÍCITAMENTE EL MODELO A LA VISTA
+    return $this->render('request-password-reset', [
+        'model' => $model // ← ¡Esta línea es crucial!
+    ]);
+}
+
+public function actionResetPassword($token)
+{
+    try {
+        $model = new ResetPasswordForm($token);
+    } catch (InvalidParamException $e) {
+        throw new BadRequestHttpException($e->getMessage());
+    }
+    
+    if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
+        Yii::$app->session->setFlash('success', 'Nueva contraseña guardada correctamente.');
+        return $this->goHome();
+    }
+    
+    return $this->render('resetPassword', [
+        'model' => $model,
+    ]);
+}
 
     /**
      * Displays homepage.
@@ -86,6 +133,35 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
+
+    public function actionPruebaLogin()
+{
+    $correo = 'veamos@gmail.com'; // Reemplázalo con un correo real
+    $password = '12345678'; // La contraseña real que quieres probar
+
+    // Buscar el usuario en la BD
+    $usuario = User::findOne(['correo' => $correo]);
+
+    if (!$usuario) {
+        return "Usuario no encontrado ❌";
+    }
+
+    // Ver los datos almacenados en la BD
+    echo "Password en BD: " . $usuario->password . "<br>";
+    echo "Salt en BD: " . $usuario->salt . "<br>";
+
+    // Generar el hash de la contraseña ingresada
+    $inputHash = hash('sha256', $password . $usuario->salt);
+    echo "Hash generado en PHP: " . $inputHash . "<br>";
+
+    // Comparar hashes
+    if (hash_equals($inputHash, $usuario->password)) {
+        return "Contraseña válida ✅";
+    } else {
+        return "Contraseña incorrecta ❌";
+    }
+}
+
 
     /**
      * Logout action.
@@ -132,4 +208,7 @@ class SiteController extends Controller
     {
         return $this->render('admin');
     }
+
+
+    
 }

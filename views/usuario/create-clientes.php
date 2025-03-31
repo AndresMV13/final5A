@@ -26,6 +26,8 @@ use yii\widgets\ActiveForm;
     <?= $form->field($model, 'correo')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
+    
+    <?= $form->field($model, 'password_repeat')->passwordInput() ?>
 
     <div class="form-group">
         <?= Html::submitButton('Registrarse como Cliente', ['class' => 'btn btn-success']) ?>

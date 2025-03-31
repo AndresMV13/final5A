@@ -11,6 +11,7 @@ use app\models\Calificacion;
 <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'columns' => [
+        'usuario.correo',
         [
             'attribute' => 'calificacion',
             'format' => 'raw',

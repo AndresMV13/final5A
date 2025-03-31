@@ -34,6 +34,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     /**
      * ENUM field values
      */
+    public $password_repeat;
+    public $currentPassword;
+    public $newPassword;
+    public $newPasswordRepeat;
     const STATUS_ACTIVO = 'activo';
     const STATUS_INACTIVO = 'inactivo';
 
@@ -44,25 +48,40 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return 'usuario';
     }
+    public function scenarios()
+{
+    return [
+        'changePassword' => ['currentPassword', 'newPassword', 'newPasswordRepeat'],
+    ];
+}
 
     /**
      * {@inheritdoc}
      */
     public function rules()
-    {
-        return [
-            [['status'], 'default', 'value' => 'activo'],
-            [['id_rol', 'nombre', 'apellido_paterno', 'apellido_materno', 'correo', 'password'], 'required'],
-            [['id_rol'], 'integer'],
-            [['status'], 'string'],
-            [['nombre', 'apellido_paterno', 'apellido_materno'], 'string', 'max' => 70],
-            [['correo'], 'string', 'max' => 60],
-            [['password'], 'string', 'max' => 350],
-            [['salt'], 'string', 'max' => 50],
-            ['status', 'in', 'range' => array_keys(self::optsStatus())],
-            [['id_rol'], 'exist', 'skipOnError' => true, 'targetClass' => Rol::class, 'targetAttribute' => ['id_rol' => 'id']],
-        ];
-    }
+{
+    return [
+        // Reglas generales (aplican a todos los scenarios)
+        [['status'], 'default', 'value' => 'activo'],
+        [['id_rol', 'nombre', 'apellido_paterno', 'apellido_materno', 'correo', 'password'], 'required'],
+        [['id_rol'], 'integer'],
+        [['status'], 'string'],
+        [['nombre', 'apellido_paterno', 'apellido_materno'], 'string', 'max' => 70],
+        [['correo'], 'string', 'max' => 60],
+        [['password'], 'string', 'min' => 8, 'max' => 350],
+        [['password_repeat'], 'string', 'min' => 8, 'max' => 350],
+        [['password_repeat'], 'compare', 'compareAttribute' => 'password', 'message' => 'Las contraseñas no coinciden'],
+        [['salt'], 'string', 'max' => 50],
+        ['status', 'in', 'range' => array_keys(self::optsStatus())],
+        [['id_rol'], 'exist', 'skipOnError' => true, 'targetClass' => Rol::class, 'targetAttribute' => ['id_rol' => 'id']],
+        
+        // Reglas específicas para cambio de contraseña
+        [['currentPassword', 'newPassword', 'newPasswordRepeat'], 'required'],
+        ['newPassword', 'string', 'min' => 8],
+        ['newPasswordRepeat', 'compare', 'compareAttribute' => 'newPassword'],
+    ];
+}
+
 
     /**
      * {@inheritdoc}
@@ -76,7 +95,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'apellido_paterno' => 'Apellido Paterno',
             'apellido_materno' => 'Apellido Materno',
             'correo' => 'Correo',
-            'password' => 'Password',
+            'password' => 'Contraseña',
+            'currentPassword' => 'Contraseña Actual',
+            'newPassword' => 'Nueva Contraseña',
+            'newPasswordRepeat' => 'Repetir Nueva Contraseña',
+            'password_repeat' => 'Repetir Contraseña',
             'salt' => 'Salt',
             'status' => 'Status',
         ];
@@ -91,6 +114,14 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return $this->hasMany(Asistencia::class, ['User_id' => 'id']);
     }
+    public function validateCurrentPassword($attribute, $params)
+{
+    if (!$this->hasErrors()) {
+        if (!$this->validatePassword($this->correo, $this->currentPassword)) {
+            $this->addError($attribute, 'La contraseña actual es incorrecta.');
+        }
+    }
+}
 
     /**
      * Gets query for [[CalificacionSoportes]].
@@ -264,6 +295,50 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         return self:: findOne(['correo'=>$correo]);
     }
 
+    public static function findByCorreo($correo)
+    {
+        return static::findOne(['correo' => $correo]);
+    }
+
+    /** 
+     * Bloque de funciones para poder recuperar una cuenta de la cual no tenemos contraseña
+    */
+
+    public function generatePasswordResetToken()
+    {
+        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
+        $this->save(false);
+    }
+    
+    public static function findByPasswordResetToken($token)
+    {
+        if (!static::isPasswordResetTokenValid($token)) {
+            return null;
+        }
+        
+        return static::findOne([
+            'password_reset_token' => $token,
+        ]);
+    }
+    
+    public static function isPasswordResetTokenValid($token)
+    {
+        if (empty($token)) {
+            return false;
+        }
+        
+        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
+        $expire = 3600; // 1 hora de validez
+        return $timestamp + $expire >= time();
+    }
+    
+    public function removePasswordResetToken()
+    {
+        $this->password_reset_token = null;
+        $this->save(false);
+    }
+
+
     /**
      * {@inheritdoc}
      */
@@ -292,6 +367,42 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return $this->authKey === $authKey;
     }
+    
+    public function validatePassword($correo, $password)
+{
+    $command = Yii::$app->db->createCommand('CALL validate_user_password(:correo, :password, @result)');
+    $command->bindValue(':correo', $correo);
+    $command->bindValue(':password', $password);
+    $command->execute();
+
+    // Obtener el resultado
+    $result = Yii::$app->db->createCommand('SELECT @result AS result')->queryScalar();
+
+    if ($result == 1) {
+        return true; // Contraseña correcta
+    } else {
+        return false; // Contraseña incorrecta
+    }
+}
+
+// Removed duplicate validateCurrentPassword method to avoid redeclaration error.
+
+
+
+    
+
+
+    public function debugPasswordInfo($inputPassword)
+{
+    return [
+        'stored_password' => $this->password,
+        'stored_salt' => $this->salt,
+        'input_hashed' => hash('sha256', $inputPassword),
+        'salt_from_password' => substr($this->password, 64),
+        'password_length' => strlen($this->password),
+        'validation_result' => $this->validatePassword($inputPassword)
+    ];
+}
 
     /**
      * Validates password
@@ -299,15 +410,72 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      * @param string $password password to validate
      * @return bool if password provided is valid for current user
      */
-    public function validatePassword($password)
-    {
-        $storedHash=$this->password;
-        $salt=$this->salt;
-
-        $hashedPassword = hash('sha256',$password,$salt);
-
-        return $this->password === $password;
+    /**
+ * Cambia la contraseña verificando la actual primero
+ * 
+ * @param string $currentPassword Contraseña actual en texto plano
+ * @param string $newPassword Nueva contraseña en texto plano
+ * @return bool Si el cambio fue exitoso
+ */
+public function changePassword($currentPassword, $newPassword)
+{
+    if ($this->newPassword !== $this->newPasswordRepeat) {
+        $this->addError('newPasswordRepeat', 'Las contraseñas no coinciden');
+        return false;
     }
+    $command = Yii::$app->db->createCommand('CALL update_user_password(:correo, :currentPassword, :newPassword)');
+    $command->bindValue(':correo', $this->correo);
+    $command->bindValue(':currentPassword', $currentPassword);
+    $command->bindValue(':newPassword', $newPassword);
+
+    Yii::info("Ejecutando procedimiento almacenado con correo: {$this->correo}", __METHOD__);
+    Yii::info("Contraseña actual ingresada: $currentPassword", __METHOD__);
+    Yii::info("Nueva contraseña a actualizar: $newPassword", __METHOD__);
+
+    $result = $command->queryScalar(); // Devuelve el resultado del procedimiento almacenado
+
+    Yii::info("Resultado del procedimiento: $result", __METHOD__);
+
+    if ($result == 1) {
+        return true; // Contraseña actualizada con éxito
+    } elseif ($result == 2) {
+        $this->addError('currentPassword', 'La contraseña actual es incorrecta');
+        return false;
+    } else {
+        $this->addError('currentPassword', 'Error al actualizar la contraseña');
+        return false;
+    }
+}
+
+
+
+
+
+
+
+
+    /**
+ * Actualiza la contraseña de un usuario manteniendo el formato de encriptación existente
+ * 
+ * @param string $newPassword Nueva contraseña en texto plano
+ * @return bool Si la actualización fue exitosa
+ */
+public function updatePassword($newPassword)
+{
+    // Generar un nuevo salt (puedes mantener el mismo si prefieres)
+    $salt = Yii::$app->security->generateRandomString();
+    
+    // Encriptar según tu formato actual: SHA-256 + salt concatenado
+    $encryptedPassword = hash('sha256', $newPassword) . $salt;
+    
+    // Actualizar los campos
+    $this->password = $encryptedPassword;
+    $this->salt = $salt;
+    
+    return $this->save(false); // false para saltear validación si no es necesaria
+}
+
+
 
     public function info(){
 
@@ -342,6 +510,8 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         $command->bindValue(':id_usuario',$id_usuario);
         return $command->queryAll();
     }
+    
 
+    
     
 }

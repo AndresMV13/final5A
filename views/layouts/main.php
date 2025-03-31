@@ -201,10 +201,14 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(3)
             ? ['label' => 'Mis Tickets', 'url' => ['/tickets/my-tickets'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(3)
+            ? ['label' => 'Perfil', 'url' => ['usuario/my-view'], 'linkOptions' => ['class' => 'nav-link']] : '',
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(2)
             ? ['label' => 'Tickets Asignados', 'url' => ['/tickets/my-tickets'], 'linkOptions' => ['class' => 'nav-link']] : '',
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)
             ? ['label' => 'Tickets', 'url' => ['/tickets/my-tickets'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)
+            ? ['label' => 'Asignacion de Horarios', 'url' => ['/operador-horario/index'], 'linkOptions' => ['class' => 'nav-link']] : '',
             
             Yii::$app->user->isGuest 
                 ? ['label' => 'Iniciar Sesión', 'url' => ['/site/login'], 'linkOptions' => ['class' => 'nav-link mt-auto']]

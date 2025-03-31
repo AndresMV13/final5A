@@ -31,14 +31,18 @@ $this->params['breadcrumbs'][] = $this->title;
             'nombre',
             'apellido_paterno',
             'apellido_materno',
-            'correo',
-            'id_rol',
+            'correo',   
+            [
+                'attribute' => 'rol.nombre',
+                'label' => 'Rol',
+            ],
             
             //'password',
             //'salt',
             //'status',
             [
                 'class' => ActionColumn::className(),
+                'template' => '{view} {delete}',
                 'urlCreator' => function ($action, User $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  },'buttons' => [

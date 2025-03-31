@@ -2,16 +2,18 @@
 
 namespace app\controllers;
 use Yii;
-use app\models\CalificacionSoporte;
-use app\models\CalificacionSoporteSearch;
-use app\models\Tickets;
-
+use app\models\OperadorHorario;
+use app\models\OperadorHorarioSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;/**
- * CalificacionSoporteController implements the CRUD actions for CalificacionSoporte model.
+use yii\filters\VerbFilter;
+use app\models\User;
+use app\models\Horario;
+
+/**
+ * OperadorHorarioController implements the CRUD actions for OperadorHorario model.
  */
-class CalificacionSoporteController extends Controller
+class OperadorHorarioController extends Controller
 {
     /**
      * @inheritDoc
@@ -32,29 +34,39 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Lists all CalificacionSoporte models.
+     * Lists all OperadorHorario models.
      *
      * @return string
      */
-    public function actionIndex()
-    {
-        $searchModel = new CalificacionSoporteSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+    
+     public function actionIndex()
+     {
+         $operadores = User::find()->where(['id_rol' => 2])->all(); // Suponiendo que 2 es el rol de operador
+         $horarios = Horario::find()->all();
+ 
+         return $this->render('index', [
+             'operadores' => $operadores,
+             'horarios' => $horarios,
+             'model' => new OperadorHorario(),
+         ]);
+     }
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+     public function actionAsignar()
+    {
+        $model = new OperadorHorario();
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            Yii::$app->session->setFlash('success', 'Horario asignado correctamente.');
+            return $this->redirect(['index']);
+        }
+
+        Yii::$app->session->setFlash('error', 'No se pudo asignar el horario.');
+        return $this->redirect(['index']);
     }
 
-    /**
-     * Calcula el promedio de las calificaciones.
-     * @return float
-     */
-
 
     /**
-     * Displays a single CalificacionSoporte model.
+     * Displays a single OperadorHorario model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -67,32 +79,29 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Creates a new CalificacionSoporte model.
+     * Creates a new OperadorHorario model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate($id)
+    public function actionCreate()
     {
-        $modelTicket = Tickets::findOne($id); // Recuperar el modelo del ticket
+        $model = new OperadorHorario();
 
-    if (!$modelTicket) {
-        throw new NotFoundHttpException('El ticket no existe.');
-    }
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
 
-    $modelCalificacion = new CalificacionSoporte(); // Crear un nuevo modelo de calificación
-
-    if ($modelCalificacion->load(Yii::$app->request->post()) && $modelCalificacion->save()) {
-        Yii::$app->session->setFlash('success', 'Gracias por contestar la encuesta');
-        return $this->redirect(['tickets/my-tickets']);    }
-
-    return $this->render('create', [
-        'modelCalificacion' => $modelCalificacion,
-        'modelTicket' => $modelTicket, // Pasar el modelo del ticket a la vista
-    ]);
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
-     * Updates an existing CalificacionSoporte model.
+     * Updates an existing OperadorHorario model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -112,7 +121,7 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Deletes an existing CalificacionSoporte model.
+     * Deletes an existing OperadorHorario model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -126,15 +135,15 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Finds the CalificacionSoporte model based on its primary key value.
+     * Finds the OperadorHorario model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return CalificacionSoporte the loaded model
+     * @return OperadorHorario the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = CalificacionSoporte::findOne(['id' => $id])) !== null) {
+        if (($model = OperadorHorario::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

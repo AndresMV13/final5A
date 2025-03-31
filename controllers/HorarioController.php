@@ -1,17 +1,17 @@
 <?php
 
 namespace app\controllers;
-use Yii;
-use app\models\CalificacionSoporte;
-use app\models\CalificacionSoporteSearch;
-use app\models\Tickets;
 
+use app\models\Horario;
+use app\models\HorarioSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;/**
- * CalificacionSoporteController implements the CRUD actions for CalificacionSoporte model.
+use yii\filters\VerbFilter;
+
+/**
+ * HorarioController implements the CRUD actions for Horario model.
  */
-class CalificacionSoporteController extends Controller
+class HorarioController extends Controller
 {
     /**
      * @inheritDoc
@@ -32,13 +32,13 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Lists all CalificacionSoporte models.
+     * Lists all Horario models.
      *
      * @return string
      */
     public function actionIndex()
     {
-        $searchModel = new CalificacionSoporteSearch();
+        $searchModel = new HorarioSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
@@ -48,13 +48,7 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Calcula el promedio de las calificaciones.
-     * @return float
-     */
-
-
-    /**
-     * Displays a single CalificacionSoporte model.
+     * Displays a single Horario model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -67,32 +61,29 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Creates a new CalificacionSoporte model.
+     * Creates a new Horario model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    public function actionCreate($id)
+    public function actionCreate()
     {
-        $modelTicket = Tickets::findOne($id); // Recuperar el modelo del ticket
+        $model = new Horario();
 
-    if (!$modelTicket) {
-        throw new NotFoundHttpException('El ticket no existe.');
-    }
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
 
-    $modelCalificacion = new CalificacionSoporte(); // Crear un nuevo modelo de calificación
-
-    if ($modelCalificacion->load(Yii::$app->request->post()) && $modelCalificacion->save()) {
-        Yii::$app->session->setFlash('success', 'Gracias por contestar la encuesta');
-        return $this->redirect(['tickets/my-tickets']);    }
-
-    return $this->render('create', [
-        'modelCalificacion' => $modelCalificacion,
-        'modelTicket' => $modelTicket, // Pasar el modelo del ticket a la vista
-    ]);
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     /**
-     * Updates an existing CalificacionSoporte model.
+     * Updates an existing Horario model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -112,7 +103,7 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Deletes an existing CalificacionSoporte model.
+     * Deletes an existing Horario model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -126,15 +117,15 @@ class CalificacionSoporteController extends Controller
     }
 
     /**
-     * Finds the CalificacionSoporte model based on its primary key value.
+     * Finds the Horario model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return CalificacionSoporte the loaded model
+     * @return Horario the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = CalificacionSoporte::findOne(['id' => $id])) !== null) {
+        if (($model = Horario::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

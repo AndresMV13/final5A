@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use app\models\Rol;;
+use yii\data\ActiveDataProvider;
 
 /**
  * UsuarioController implements the CRUD actions for Usuario model.
@@ -41,6 +42,7 @@ class UsuarioController extends Controller
     {
         $searchModel = new UsuarioSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        $dataProvider->query->andWhere(['!=', 'id_rol', '1']);
         $dataProvider->query->andWhere(['!=', 'id_rol', '3']);
         $dataProvider->query->andWhere(['status' => User::STATUS_ACTIVO]);
         return $this->render('index', [
@@ -55,12 +57,117 @@ class UsuarioController extends Controller
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionView($id)
-    {   
-        if(Yii::$app->user->identity->rol->nombre=='Cliente'){
-            $id=Yii::$app->user->identity->id;
+    // Controlador UsuarioController.php
+
+public function actionView($id)
+{
+    $model = $this->findModel($id);  // Obtén el operador por su ID
+
+    $dataProvider2 = new ActiveDataProvider([
+        'query' => \app\models\CalificacionSoporte::find()
+            ->select([
+                'numero_serie', 
+                'ROUND((IFNULL(p1, 0) + IFNULL(p2, 0) + IFNULL(p3, 0) + IFNULL(p4, 0) + IFNULL(p5, 0)) / 5, 2) AS promedio'
+            ])
+            ->where(['id_operador' => $model->id])  // Filtramos por operador_id
+            ->orderBy(['numero_serie' => SORT_DESC]),
+        'pagination' => [
+            'pageSize' => 10,  // Número de registros por página
+        ],
+    ]);
+
+    return $this->render('view', [
+        'model' => $model,
+        'dataProviderCalificaciones' => $dataProvider2,
+    ]);
+}
+
+
+    public function actionMyView()
+    {
+        $id=Yii::$app->user->identity->id;
+        return $this->render('my-view', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
+    public function actionUpdatePassword()
+{
+    $model = $this->findModel(Yii::$app->user->identity->id);
+    $model->scenario = 'changePassword';
+
+    if (Yii::$app->request->isPost) {
+        $model->load(Yii::$app->request->post());
+        
+        if (!$model->validate()) {
+            Yii::$app->session->setFlash('error', 'Por favor corrija los errores en el formulario');
+            return $this->render('update-password', ['model' => $model]);
         }
-        return $this->render('view', [
+
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        
+        try {
+            // Llamar al procedimiento almacenado
+            $command = $db->createCommand("CALL update_user_password(:correo, :current, :new, @error)")
+                ->bindValue(':correo', Yii::$app->user->identity->correo)
+                ->bindValue(':current', $model->currentPassword)
+                ->bindValue(':new', $model->newPassword);
+            
+            // Ejecutar el procedimiento
+            $command->execute();
+            
+            // Cerrar cualquier resultado pendiente
+            $command->pdoStatement->closeCursor();
+            
+            // Obtener el código de error
+            $errorCode = $db->createCommand("SELECT @error")->queryScalar();
+            
+            // Manejar el resultado
+            switch ($errorCode) {
+                case 0: // Éxito
+                    $transaction->commit();
+                    Yii::$app->user->logout();
+                    Yii::$app->session->setFlash('success', 'Contraseña actualizada correctamente. Por favor inicie sesión nuevamente.');
+                    return $this->redirect(['site/login']);
+                
+                case 3: // Usuario no encontrado
+                    throw new \Exception('Usuario no registrado en el sistema');
+                
+                case 4: // Contraseña incorrecta
+                    $model->addError('currentPassword', 'La contraseña actual es incorrecta');
+                    break;
+                
+                case 1: // Error SQL
+                    throw new \Exception('Error en la base de datos');
+                
+                case 2: // Advertencia SQL
+                    throw new \Exception('Problema con la base de datos');
+                
+                default:
+                    throw new \Exception('Error al actualizar la contraseña');
+            }
+            
+            $transaction->rollBack();
+            
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::error("Error actualizando contraseña: " . $e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', $e->getMessage());
+        }
+    }
+
+    return $this->render('update-password', ['model' => $model]);
+}
+    
+
+
+
+
+
+    public function actionViewStaff($id)
+    {
+        return $this->render('view-staff', [
             'model' => $this->findModel($id),
         ]);
     }
@@ -163,7 +270,7 @@ class UsuarioController extends Controller
         if ($model->load($this->request->post())) {
             /** 
             Transformamos el id del rol a entero ya que el formula
-            */
+            **/
             $model->id_rol = (int) $model->id_rol;
             $result = $this->CreateSP($model);
             if ($result) {

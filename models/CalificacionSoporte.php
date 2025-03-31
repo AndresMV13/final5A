@@ -70,4 +70,47 @@ class CalificacionSoporte extends \yii\db\ActiveRecord
         return $this->hasOne(User::class, ['id' => 'id_operador']);
     }
 
+     // Otros métodos y atributos...
+
+    /**
+     * Calcula el promedio de las calificaciones.
+     * @return float
+     */
+    public function getPromedio()
+{
+    $total = 0;
+    $count = 0;
+
+    // Sumar solo los valores no nulos
+    if ($this->p1 !== null) {
+        $total += $this->p1;
+        $count++;
+    }
+    if ($this->p2 !== null) {
+        $total += $this->p2;
+        $count++;
+    }
+    if ($this->p3 !== null) {
+        $total += $this->p3;
+        $count++;
+    }
+    if ($this->p4 !== null) {
+        $total += $this->p4;
+        $count++;
+    }
+    if ($this->p5 !== null) {
+        $total += $this->p5;
+        $count++;
+    }
+
+    // Evitar división por cero
+    if ($count > 0) {
+        return round($total / $count, 2);
+    }
+    return 0;  // Retorna 0 si no hay calificaciones
+}
+
+
+    
+
 }

@@ -111,14 +111,7 @@ $this->params['breadcrumbs'][] = $this->title;
         height: 50px;
     }
     
-    body {
-        background: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-        background-size: cover;
-        display: flex;
-        align-items: center;
-        min-height: 100vh;
-    }
-    
+   
     .site-login {
         width: 100%;
         padding: 2rem;
@@ -131,9 +124,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="site-login">
     <div class="gaming-login">
-        <div class="brand-logo">
-            <img src="https://via.placeholder.com/150x50/6a0dad/ffffff?text=CODEX+NENIS" alt="Codex Nenis">
-        </div>
+        
         
         <div class="login-header">
             <h1>INICIO DE SESIÓN</h1>
@@ -175,8 +166,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php ActiveForm::end(); ?>
 
         <div class="login-links">
-            <?= Html::a('¿Olvidaste tu contraseña?', ['site/request-password-reset']) ?>
-            <span class="mx-2">|</span>
+        <?= Html::a('¿Olvidaste tu contraseña?', ['site/request-password-reset']) ?>            <span class="mx-2">|</span>
             <?= Html::a('Registrarme', ['usuario/create-clientes'], ['class' => 'font-weight-bold']) ?>
         </div>
     </div>

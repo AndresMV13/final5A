@@ -16,19 +16,16 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <p>
         <?= Html::a('Actualizar Informacion', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('Actualizar Contraseña', ['update-password', 'id' => $model->id], ['class' => 'btn btn-dark']) ?>
     </p>
 
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-            'id_rol',
             'nombre',
             'apellido_paterno',
             'apellido_materno',
             'correo',
-            'password',
-            'salt',
-            'status',
         ],
     ]) ?>
 
