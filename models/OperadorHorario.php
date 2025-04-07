@@ -11,6 +11,7 @@ use Yii;
  * @property int $usuario_id
  * @property int $horario_id
  * @property string $fecha_asignacion
+ * @property string $status
  *
  * @property Horario $horario
  * @property Usuario $usuario
@@ -18,6 +19,11 @@ use Yii;
 class OperadorHorario extends \yii\db\ActiveRecord
 {
 
+    /**
+     * ENUM field values
+     */
+    const STATUS_0 = '0';
+    const STATUS_1 = '1';
 
     /**
      * {@inheritdoc}
@@ -33,9 +39,11 @@ class OperadorHorario extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['usuario_id', 'horario_id'], 'required'],
+            [['usuario_id', 'horario_id', 'status'], 'required'],
             [['usuario_id', 'horario_id'], 'integer'],
             [['fecha_asignacion'], 'safe'],
+            [['status'], 'string'],
+            ['status', 'in', 'range' => array_keys(self::optsStatus())],
             [['usuario_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['usuario_id' => 'id']],
             [['horario_id'], 'exist', 'skipOnError' => true, 'targetClass' => Horario::class, 'targetAttribute' => ['horario_id' => 'id']],
         ];
@@ -48,9 +56,10 @@ class OperadorHorario extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'usuario_id' => 'Operador',
-            'horario_id' => 'Horario',
+            'usuario_id' => 'Usuario ID',
+            'horario_id' => 'Horario ID',
             'fecha_asignacion' => 'Fecha Asignacion',
+            'status' => 'Status',
         ];
     }
 
@@ -74,4 +83,50 @@ class OperadorHorario extends \yii\db\ActiveRecord
         return $this->hasOne(User::class, ['id' => 'usuario_id']);
     }
 
+
+    /**
+     * column status ENUM value labels
+     * @return string[]
+     */
+    public static function optsStatus()
+    {
+        return [
+            self::STATUS_0 => '0',
+            self::STATUS_1 => '1',
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public function displayStatus()
+    {
+        return self::optsStatus()[$this->status];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStatus0()
+    {
+        return $this->status === self::STATUS_0;
+    }
+
+    public function setStatusTo0()
+    {
+        $this->status = self::STATUS_0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isStatus1()
+    {
+        return $this->status === self::STATUS_1;
+    }
+
+    public function setStatusTo1()
+    {
+        $this->status = self::STATUS_1;
+    }
 }

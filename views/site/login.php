@@ -166,7 +166,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php ActiveForm::end(); ?>
 
         <div class="login-links">
-        <?= Html::a('¿Olvidaste tu contraseña?', ['site/request-password-reset']) ?>            <span class="mx-2">|</span>
+        <?= Html::a('¿Olvidaste tu contraseña?', ['usuario/recuperar-contrasena']) ?>            <span class="mx-2">|</span>
             <?= Html::a('Registrarme', ['usuario/create-clientes'], ['class' => 'font-weight-bold']) ?>
         </div>
     </div>

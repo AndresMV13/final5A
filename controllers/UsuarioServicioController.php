@@ -1,7 +1,9 @@
 <?php
 
 namespace app\controllers;
-
+use Yii;
+use app\models\Servicio;
+use app\models\User;
 use app\models\UsuarioServicio;
 use app\models\UsuarioServicioSearch;
 use yii\web\Controller;
@@ -83,6 +85,20 @@ class UsuarioServicioController extends Controller
         ]);
     }
 
+    public function actionMisSuscripciones()
+{
+    // Obtener las suscripciones activas del usuario logueado
+    $suscripciones = UsuarioServicio::find()
+        ->where(['id_usuario' => Yii::$app->user->id])
+        ->andWhere(['in', 'estatus', ['activo', 'pendiente']])
+        ->all();
+    
+    return $this->render('mis-suscripciones', ['suscripciones' => $suscripciones]);
+}
+
+
+
+
     /**
      * Updates an existing UsuarioServicio model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -132,5 +148,59 @@ class UsuarioServicioController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionSuscribir($id_servicio)
+    {
+        $servicio= Servicio::findOne($id_servicio);
+        $model = new UsuarioServicio();
+        $model->id_usuario = Yii::$app->user->id;
+        $model->id_servicio = $id_servicio;
+        $model->precio_contratado = $servicio->precio;
+        $model->estatus = 'activo';
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'Suscripción activada.');
+        }
+        return $this->redirect(['usuario-servicio/mis-suscripciones']);
+    }
+
+    public function actionCancelar($id)
+    {
+        $model = UsuarioServicio::findOne($id);
+        if ($model && $model->id_usuario == Yii::$app->user->id) {
+            $model->estatus = 'pendiente';
+            $model->save();
+            Yii::$app->session->setFlash('success', 'Solicitud de cancelación enviada.');
+        }
+        return $this->redirect(['usuario-servicio/mis-suscripciones']);
+    }
+
+    public function actionAceptarCancelacion($id)
+    {
+        $model = UsuarioServicio::findOne($id);
+        if ($model) {
+            $model->estatus = 'inactivo';
+            $model->fecha_cancelacion = date('Y-m-d H:i:s');
+            $model->save();
+            Yii::$app->session->setFlash('success', 'Suscripción cancelada.');
+        }
+        return $this->redirect(['usuario-servicio/pendientes']);
+    }
+
+    public function actionRechazarCancelacion($id)
+    {
+        $model = UsuarioServicio::findOne($id);
+        if ($model) {
+            $model->estatus = 'activo';
+            $model->save();
+            Yii::$app->session->setFlash('success', 'Cancelación rechazada.');
+        }
+        return $this->redirect(['usuario-servicio/pendientes']);
+    }
+
+    public function actionPendientes()
+    {
+        $pendientes = UsuarioServicio::find()->where(['estatus' => 'pendiente'])->all();
+        return $this->render('pendientes', ['pendientes' => $pendientes]);
     }
 }

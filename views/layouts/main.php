@@ -164,7 +164,13 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav w-100'],
         'items' => [
-            ['label' => 'Inicio', 'url' => ['/site/index'], 'linkOptions' => ['class' => 'nav-link']],
+
+            !Yii::$app->user->isGuest&& Yii::$app->user->identity->hasRole(3)
+            ? ['label' => 'Inicio', 'url' => ['/site/index'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(2)
+            ? ['label' => 'Inicio', 'url' => ['/site/operador-dashboard'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)
+            ? ['label' => 'Inicio', 'url' => ['/site/admin-dashboard'], 'linkOptions' => ['class' => 'nav-link']] : '',
             
             // Menú desplegable para Servicios
             !Yii::$app->user->isGuest && (Yii::$app->user->identity->validateAccess('servicio') || Yii::$app->user->identity->hasRole(3))
@@ -191,7 +197,6 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
                 'items' => [
                     ['label' => 'Roles', 'url' => ['/rol/index']],
                     ['label' => 'Usuarios', 'url' => ['/usuario/index']],
-                    ['label' => 'Asistencias', 'url' => ['/asistencia/index']],
                 ],
                 'options' => ['class' => 'nav-item dropdown'],
                 'linkOptions' => ['class' => 'nav-link dropdown-toggle', 'role' => 'button', 'data-bs-toggle' => 'dropdown'],
@@ -201,14 +206,14 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(3)
             ? ['label' => 'Mis Tickets', 'url' => ['/tickets/my-tickets'], 'linkOptions' => ['class' => 'nav-link']] : '',
-            !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(3)
-            ? ['label' => 'Perfil', 'url' => ['usuario/my-view'], 'linkOptions' => ['class' => 'nav-link']] : '',
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(2)
             ? ['label' => 'Tickets Asignados', 'url' => ['/tickets/my-tickets'], 'linkOptions' => ['class' => 'nav-link']] : '',
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)
-            ? ['label' => 'Tickets', 'url' => ['/tickets/my-tickets'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            ? ['label' => 'Tickets', 'url' => ['/tickets/index'], 'linkOptions' => ['class' => 'nav-link']] : '',
             !Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)
-            ? ['label' => 'Asignacion de Horarios', 'url' => ['/operador-horario/index'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            ? ['label' => 'Asignacion de Horarios', 'url' => ['/usuario/asignar-horario'], 'linkOptions' => ['class' => 'nav-link']] : '',
+            !Yii::$app->user->isGuest
+            ? ['label' => 'Perfil', 'url' => ['usuario/my-view'], 'linkOptions' => ['class' => 'nav-link']] : '',
             
             Yii::$app->user->isGuest 
                 ? ['label' => 'Iniciar Sesión', 'url' => ['/site/login'], 'linkOptions' => ['class' => 'nav-link mt-auto']]

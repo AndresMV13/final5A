@@ -1,12 +1,12 @@
 <?php
- namespace app\models;
- use app\models\User;
-    use Yii;
+namespace app\models;
+use app\models\User;
+use Yii;
 
- class PasswordResetRequestForm extends \yii\base\Model
- {
-     public $correo;
-     
+class PasswordResetRequestForm extends \yii\base\Model
+{
+    public $correo;
+    public $respuesta_seguridad;     
     
 public function rules()
 {

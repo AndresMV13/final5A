@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('UTC');  // Establecer la zona horaria global
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
@@ -26,6 +27,10 @@ $config = [
                 'chat/send-message' => 'chat/send-message',
             ],
         ],
+        'formatter' => [
+            'dateFormat' => 'php:Y-m-d',
+            'datetimeFormat' => 'php:Y-m-d H:i:s',
+        ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
@@ -42,8 +47,6 @@ $config = [
             'transport' => [
             'class' => 'Swift_SmtpTransport',
             'host' => 'smtp.gmail.com',
-            'username' => 'firebreak21@gmail.com',
-            'password' => 'pokemongamer13',
             'port' => '587',
             'encryption' => 'tls',
         ],
@@ -54,6 +57,7 @@ $config = [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
+                    'logVars' => ['_GET', '_POST', '_FILES', '_COOKIE', '_SESSION', '_SERVER'],
                 ],
             ],
         ],

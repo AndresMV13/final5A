@@ -18,7 +18,7 @@ class OperadorHorarioSearch extends OperadorHorario
     {
         return [
             [['id', 'usuario_id', 'horario_id'], 'integer'],
-            [['fecha_asignacion'], 'safe'],
+            [['fecha_asignacion', 'status'], 'safe'],
         ];
     }
 
@@ -64,6 +64,8 @@ class OperadorHorarioSearch extends OperadorHorario
             'horario_id' => $this->horario_id,
             'fecha_asignacion' => $this->fecha_asignacion,
         ]);
+
+        $query->andFilterWhere(['like', 'status', $this->status]);
 
         return $dataProvider;
     }

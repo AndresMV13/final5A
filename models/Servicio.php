@@ -36,6 +36,10 @@ class Servicio extends \yii\db\ActiveRecord
             [['nombre'], 'required'],
             [['nombre'], 'match', 'pattern' => '/^(?![\s\S]*[^a-zA-Z0-9\s])[\w\s]*$/', 'message' => 'El campo no puede contener solo caracteres especiales.'],
             [['nombre'], 'string', 'max' => 100, 'min'=>3],
+            [['descripcion'], 'string', 'max' => 255],
+            [['nombre'], 'unique'],
+            [['precio'], 'number'],
+            [['nombre'], 'trim'],
         ];
     }
 
@@ -47,6 +51,8 @@ class Servicio extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'nombre' => 'Nombre',
+            'descripcion' => 'Descripción',
+            'precio' => 'Precio',
         ];
     }
 

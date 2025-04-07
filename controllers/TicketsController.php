@@ -4,10 +4,12 @@ namespace app\controllers;
 use Yii;
 use app\models\User;
 use app\models\Tickets;
+use app\models\CalificacionSoporte;
 use app\models\TicketsSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\data\ActiveDataProvider;
 
 /**
  * TicketsController implements the CRUD actions for Tickets model.
@@ -38,14 +40,28 @@ class TicketsController extends Controller
      * @return string
      */
     public function actionIndex()
-    {
+    {   
+        $dataProvider = new ActiveDataProvider([
+            'query' => Tickets::find()->orderBy(['estado'=>SORT_ASC, 'fecha_creacion'=>SORT_DESC, 'n_serie'=>SORT_ASC]),
+            'pagination' => [
+                'pageSize' => 10, // Número de tickets por página
+            ],
+        ]);
+    
+        return $this->render('index', [
+            'dataProvider' => $dataProvider,
+        ]);
+        
+        
+        
+        /*
         $searchModel = new TicketsSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-        ]);
+        ]);*/
     }
 
     public function actionMyTickets()
@@ -62,8 +78,8 @@ class TicketsController extends Controller
         $dataProvider= $user->getTickets0AQ();
         $dataProvider->query->orderBy([
         'estado'=>SORT_ASC,
-        'n_serie'=>SORT_ASC,
-        'fecha_creacion'=>SORT_DESC,
+        'n_serie'=>SORT_DESC,
+        'fecha_creacion'=>SORT_ASC,
         ]);
     }elseif(Yii::$app->user->identity->rol->nombre=='Administrador'){
         $searchModel = new TicketsSearch();
@@ -88,8 +104,35 @@ class TicketsController extends Controller
      */
     public function actionView($id)
     {
+        $ticket = Tickets::findOne($id);
+
+        $calificacion = CalificacionSoporte::find()
+        ->where(['numero_serie' => $ticket->n_serie])
+        ->one();
+
+    // Calcular el promedio de las preguntas
+    $promedio = 0;
+    if ($calificacion) {
+        $preguntas = ['p1', 'p2', 'p3', 'p4', 'p5'];
+        $suma = 0;
+        $cantidad = 0;
+
+        // Sumar todas las calificaciones
+        foreach ($preguntas as $pregunta) {
+            if (isset($calificacion->$pregunta) && $calificacion->$pregunta !== null) {
+                $suma += $calificacion->$pregunta;
+                $cantidad++;
+            }
+        }
+
+        // Calcular el promedio
+        if ($cantidad > 0) {
+            $promedio = $suma / $cantidad;
+        }
+    }
         return $this->render('view', [
             'model' => $this->findModel($id),
+            'promedio'=>$promedio,
         ]);
     }
 

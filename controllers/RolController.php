@@ -42,10 +42,14 @@ class RolController extends Controller
         $searchModel = new RolSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)) {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+            } else {
+                return $this->render('..\site\index');
+            }
     }
 
     /**

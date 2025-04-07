@@ -23,6 +23,7 @@ class UsuarioServicio extends \yii\db\ActiveRecord
      */
     const ESTATUS_ACTIVO = 'activo';
     const ESTATUS_INACTIVO = 'inactivo';
+    const ESTATUS_PENDIENTE = 'pendiente';
 
     /**
      * {@inheritdoc}
@@ -43,6 +44,8 @@ class UsuarioServicio extends \yii\db\ActiveRecord
             [['id_usuario', 'id_servicio'], 'integer'],
             [['estatus'], 'string'],
             ['estatus', 'in', 'range' => array_keys(self::optsEstatus())],
+            [['fecha_contratacion', 'fecha_cancelacion'], 'safe'],
+            [['precio_contradado'], 'number'],
             [['id_usuario'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['id_usuario' => 'id']],
             [['id_servicio'], 'exist', 'skipOnError' => true, 'targetClass' => Servicio::class, 'targetAttribute' => ['id_servicio' => 'id']],
             ['id_servicio', 'validateServicioUnico', 'skipOnError' => true],
@@ -64,16 +67,16 @@ class UsuarioServicio extends \yii\db\ActiveRecord
 
     public function validateServicioUnico($attribute, $params)
 {
-    if ($this->isNewRecord) { // Solo validar si es un nuevo registro
-        $exists = self::find()
-            ->where(['id_usuario' => $this->id_usuario, 'id_servicio' => $this->id_servicio])
-            ->exists();
+    $existe = self::find()
+        ->where(['id_usuario' => $this->id_usuario, 'id_servicio' => $this->id_servicio])
+        ->andWhere(['in', 'estatus', ['activo', 'pendiente']])
+        ->exists();
 
-        if ($exists) {
-            $this->addError($attribute, 'Ya has contratado este servicio.');
-        }
+    if ($existe) {
+        $this->addError($attribute, 'Ya tienes este servicio activo o con una solicitud pendiente.');
     }
 }
+
 
 
     /**
@@ -106,6 +109,7 @@ class UsuarioServicio extends \yii\db\ActiveRecord
         return [
             self::ESTATUS_ACTIVO => 'activo',
             self::ESTATUS_INACTIVO => 'inactivo',
+            self::ESTATUS_PENDIENTE => 'pendiente',
         ];
     }
 
@@ -142,4 +146,6 @@ class UsuarioServicio extends \yii\db\ActiveRecord
     {
         $this->estatus = self::ESTATUS_INACTIVO;
     }
+
+    
 }

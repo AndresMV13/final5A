@@ -1,14 +1,12 @@
 <?php
 
 namespace app\controllers;
-use Yii;
+
 use app\models\OperadorHorario;
 use app\models\OperadorHorarioSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use app\models\User;
-use app\models\Horario;
 
 /**
  * OperadorHorarioController implements the CRUD actions for OperadorHorario model.
@@ -38,32 +36,16 @@ class OperadorHorarioController extends Controller
      *
      * @return string
      */
-    
-     public function actionIndex()
-     {
-         $operadores = User::find()->where(['id_rol' => 2])->all(); // Suponiendo que 2 es el rol de operador
-         $horarios = Horario::find()->all();
- 
-         return $this->render('index', [
-             'operadores' => $operadores,
-             'horarios' => $horarios,
-             'model' => new OperadorHorario(),
-         ]);
-     }
-
-     public function actionAsignar()
+    public function actionIndex()
     {
-        $model = new OperadorHorario();
+        $searchModel = new OperadorHorarioSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('success', 'Horario asignado correctamente.');
-            return $this->redirect(['index']);
-        }
-
-        Yii::$app->session->setFlash('error', 'No se pudo asignar el horario.');
-        return $this->redirect(['index']);
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
-
 
     /**
      * Displays a single OperadorHorario model.

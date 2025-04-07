@@ -31,6 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'nombre',
             [
                 'class' => ActionColumn::className(),
+                'template'=>'{view}',
                 'urlCreator' => function ($action, Rol $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                 }

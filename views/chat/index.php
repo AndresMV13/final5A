@@ -4,16 +4,17 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\bootstrap5\Modal;
 
+$ticketCerrado = ($model->estado !== 'abierto');
 ?>
 
 <!--Aqui va todo el pinche chat-->
+
 <div id="chat-container" class="container-fluid">
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div id="mensajes" class="chat-box">
                 <?php foreach ($mensajes as $mensaje): ?>
                     <?php if ($mensaje->id_usuario == $id_usuario): ?>
-                        <!-- Mensaje del usuario en sesión (derecha) -->
                         <div class="message-container user-message">
                             <div class="message-bubble user">
                                 <p><?= Html::encode($mensaje->mensaje) ?></p>
@@ -21,7 +22,6 @@ use yii\bootstrap5\Modal;
                             </div>
                         </div>
                     <?php else: ?>
-                        <!-- Mensaje del otro usuario (izquierda) -->
                         <div class="message-container other-message">
                             <div class="message-bubble other">
                                 <p><?= Html::encode($mensaje->mensaje) ?></p>
@@ -31,39 +31,24 @@ use yii\bootstrap5\Modal;
                     <?php endif; ?>
                 <?php endforeach; ?>
             </div>
-            <!-- Área de texto y botón para enviar mensajes -->
+
+            <?php if ($ticketCerrado): ?>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-circle"></i> Este ticket está cerrado. No se pueden enviar más mensajes.
+                </div>
+            <?php endif; ?>
+
             <div class="input-group mt-3">
-                <textarea id="contenido" class="form-control" placeholder="Escribe tu mensaje..." rows="2"></textarea>
+                <textarea id="contenido" class="form-control" placeholder="Escribe tu mensaje..." rows="2" <?= $ticketCerrado ? 'disabled' : '' ?>></textarea>
                 <div class="input-group-append">
-                    <button class="btn btn-primary" onclick="enviarMensaje()">Enviar</button>
+                    <button class="btn btn-primary" onclick="enviarMensaje()" <?= $ticketCerrado ? 'disabled' : '' ?>>Enviar</button>
                 </div>
             </div>
+
             <div class="text-right mt-3">
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmarCerrarTicketModal">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmarCerrarTicketModal" <?= $ticketCerrado ? 'disabled' : '' ?>>
                     Cerrar Ticket
                 </button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Cachitos de labio donde me besaste Cachitos de mano que tú me tomaste Si mi corazón no deja de latir Me voy a encontrar cachitos de ti
-Cachitos de llanto, por tanto llorarte Cachitos de vida que tú me quitaste Aunque el corazón me deje de latir Me van a enterrar con cachitos de ti-->
-
-
-<!-- Modal de Confirmación para Cerrar Ticket -->
-<div class="modal fade" id="confirmarCerrarTicketModal" tabindex="-1" role="dialog" aria-labelledby="confirmarCerrarTicketModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmarCerrarTicketModalLabel">¿Cerrar Ticket?</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                ¿Estás seguro de que deseas cerrar este ticket? Una vez cerrado, no podrás enviar más mensajes.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="cerrarTicket(ticketId)">Cerrar Ticket</button>
             </div>
         </div>
     </div>

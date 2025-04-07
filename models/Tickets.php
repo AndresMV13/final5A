@@ -59,6 +59,28 @@ class Tickets extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getStatusColor()
+{
+    $statusColors = [
+        'abierto' => '#17a2b8',
+        'en progreso' => '#ffc107',
+        'cerrado' => '#dc3545',
+    ];
+    
+    return $statusColors[$this->estado] ?? '#6c757d';
+}
+
+public function getStatusBadgeClass()
+{
+    $statusClasses = [
+        'abierto' => 'bg-info',
+        'en progreso' => 'bg-warning',
+        'cerrado' => 'bg-danger',
+    ];
+    
+    return $statusClasses[$this->estado] ?? 'bg-secondary';
+}
+
     /**
      * {@inheritdoc}
      */

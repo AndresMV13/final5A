@@ -78,9 +78,8 @@ class SiteController extends Controller
         }
     }
     
-    // PASA EXPLÍCITAMENTE EL MODELO A LA VISTA
     return $this->render('request-password-reset', [
-        'model' => $model // ← ¡Esta línea es crucial!
+        'model' => $model 
     ]);
 }
 
@@ -112,6 +111,20 @@ public function actionResetPassword($token)
         return $this->render('index');
     }
 
+    public function actionOperadorDashboard(){
+        if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(2)) {
+            return $this->render('operador-dashboard');  } else {
+                return $this->render('..\site\index');
+            }
+    }
+
+    public function actionAdminDashboard(){
+        if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)) {
+            return $this->render('admin-dashboard');  } else {
+                return $this->render('..\site\index');
+            }
+    }
+
     /**
      * Login action.
      *
@@ -125,6 +138,12 @@ public function actionResetPassword($token)
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            $user=Yii::$app->user->identity->id_rol;
+            if($user=='1'){
+                return $this->redirect(['site/admin-dashboard']);
+            }elseif($user=='2'){
+                return $this->redirect(['site/operador-dashboard']);
+            }
             return $this->goBack();
         }
 
@@ -134,33 +153,7 @@ public function actionResetPassword($token)
         ]);
     }
 
-    public function actionPruebaLogin()
-{
-    $correo = 'veamos@gmail.com'; // Reemplázalo con un correo real
-    $password = '12345678'; // La contraseña real que quieres probar
 
-    // Buscar el usuario en la BD
-    $usuario = User::findOne(['correo' => $correo]);
-
-    if (!$usuario) {
-        return "Usuario no encontrado ❌";
-    }
-
-    // Ver los datos almacenados en la BD
-    echo "Password en BD: " . $usuario->password . "<br>";
-    echo "Salt en BD: " . $usuario->salt . "<br>";
-
-    // Generar el hash de la contraseña ingresada
-    $inputHash = hash('sha256', $password . $usuario->salt);
-    echo "Hash generado en PHP: " . $inputHash . "<br>";
-
-    // Comparar hashes
-    if (hash_equals($inputHash, $usuario->password)) {
-        return "Contraseña válida ✅";
-    } else {
-        return "Contraseña incorrecta ❌";
-    }
-}
 
 
     /**

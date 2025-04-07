@@ -43,11 +43,21 @@ class ServicioController extends Controller
     {
         $searchModel = new ServicioSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)) {
+            return $this->render('index', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);     } else {
+                return $this->render('..\site\index');
+            }
+            if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(2)) {
+                return $this->render('index', [
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                ]);     } else {
+                    return $this->render('..\site\index');
+                }
 
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
     }
 
     /**
@@ -58,9 +68,19 @@ class ServicioController extends Controller
      */
     public function actionView($id)
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(1)) {
+            return $this->render('view', [
+                'model' => $this->findModel($id),
+            ]);        } else {
+                return $this->render('..\site\index');
+            }
+            if (!Yii::$app->user->isGuest && Yii::$app->user->identity->hasRole(2)) {
+                return $this->render('view', [
+                    'model' => $this->findModel($id),
+                ]);        } else {
+                    return $this->render('..\site\index');
+                }
+
     }
 
 

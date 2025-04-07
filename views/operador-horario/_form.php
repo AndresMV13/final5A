@@ -18,6 +18,8 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'fecha_asignacion')->textInput() ?>
 
+    <?= $form->field($model, 'status')->dropDownList([ '0', '1', ], ['prompt' => '']) ?>
+
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>

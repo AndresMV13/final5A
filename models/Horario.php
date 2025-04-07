@@ -57,7 +57,7 @@ class Horario extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
+            'id' => 'Horario',
             'dias' => 'Dias',
             'turno' => 'Turno',
             'hora_entrada_esperada' => 'Hora Entrada Esperada',
@@ -197,4 +197,12 @@ class Horario extends \yii\db\ActiveRecord
     {
         $this->turno = self::TURNO_VESPERTINO;
     }
+
+    public function getOperadoresActivos()
+{
+    return $this->hasMany(OperadorHorario::className(), ['horario_id' => 'id'])
+        ->where(['status' => '1'])
+        ->with('usuario')
+        ->orderBy('fecha_asignacion DESC');
+}
 }

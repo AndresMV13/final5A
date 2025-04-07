@@ -29,6 +29,18 @@ use yii\widgets\ActiveForm;
     
     <?= $form->field($model, 'password_repeat')->passwordInput() ?>
 
+
+    <?= $form->field($model, 'pregunta_seguridad')->dropDownList([
+    '¿Cuál es el nombre de tu primera mascota?' => '¿Cuál es el nombre de tu primera mascota?',
+    '¿Cuál es tu bebida favorita' => '¿Cuál es tu bebida favorita?',
+    '¿Superheroe favorito?' => '¿Superheroe favorito?',
+    '¿Cuál es el segundo nombre de tu madre?' => '¿Cuál es el segundo nombre de tu madre?',
+    '¿Cuál es tu comida favorita?' => '¿Cuál es tu comida favorita?',
+], ['prompt' => 'Selecciona una pregunta de seguridad']) ?>
+
+
+    <?= $form->field($model, 'respuesta_seguridad_hash')->textInput(['maxlength'=>true])?>
+
     <div class="form-group">
         <?= Html::submitButton('Registrarse como Cliente', ['class' => 'btn btn-success']) ?>
     </div>

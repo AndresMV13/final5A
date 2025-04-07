@@ -35,11 +35,13 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      * ENUM field values
      */
     public $password_repeat;
+
     public $currentPassword;
     public $newPassword;
     public $newPasswordRepeat;
     const STATUS_ACTIVO = 'activo';
     const STATUS_INACTIVO = 'inactivo';
+
 
     /**
      * {@inheritdoc}
@@ -51,7 +53,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function scenarios()
 {
     return [
+        'default' => ['id_rol', 'nombre', 'apellido_paterno', 'apellido_materno', 'correo', 'password', 'password_repeat', 'status'],
+'create' => ['id_rol', 'nombre', 'apellido_paterno', 'apellido_materno', 'correo', 'password', 'password_repeat', 'status', 'pregunta_seguridad', 'respuesta_seguridad_hash'],
         'changePassword' => ['currentPassword', 'newPassword', 'newPasswordRepeat'],
+        'recuperarCuenta' => ['pregunta_seguridad', 'respuesta_seguridad', 'respuesta_seguridad_hash'],
     ];
 }
 
@@ -69,6 +74,14 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         [['nombre', 'apellido_paterno', 'apellido_materno'], 'string', 'max' => 70],
         [['correo'], 'string', 'max' => 60],
         [['password'], 'string', 'min' => 8, 'max' => 350],
+        //Reglas para la recupercacion de cuenta
+        [['pregunta_seguridad', 'respuesta_seguridad'], 'string'],
+        [['pregunta_seguridad', 'respuesta_seguridad'], 'safe'],
+        [['correo'], 'unique', 'targetClass' => User::class, 'message' => 'Este correo ya está registrado.'],
+        [['correo'], 'email', 'message' => 'El formato del correo no es válido.'],
+        [['pregunta_seguridad'],'string','max'=>255],
+        [['respuesta_seguridad_hash'],'string','max'=>255],
+
         [['password_repeat'], 'string', 'min' => 8, 'max' => 350],
         [['password_repeat'], 'compare', 'compareAttribute' => 'password', 'message' => 'Las contraseñas no coinciden'],
         [['salt'], 'string', 'max' => 50],
@@ -89,13 +102,15 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
+            'id' => 'Usuario',
             'id_rol' => 'Rol',
             'nombre' => 'Nombre',
             'apellido_paterno' => 'Apellido Paterno',
             'apellido_materno' => 'Apellido Materno',
             'correo' => 'Correo',
             'password' => 'Contraseña',
+            'pregunta_seguridad'=>'Pregunta de Seguridad',
+            'respuesta_seguridad_hash'=>'Respuesta',
             'currentPassword' => 'Contraseña Actual',
             'newPassword' => 'Nueva Contraseña',
             'newPasswordRepeat' => 'Repetir Nueva Contraseña',
@@ -121,6 +136,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             $this->addError($attribute, 'La contraseña actual es incorrecta.');
         }
     }
+}
+public function getNombreCompleto()
+{
+    return trim($this->nombre . ' ' . $this->apellido_paterno . ' ' . $this->apellido_materno);
 }
 
     /**
@@ -183,6 +202,14 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             ]
     ]);
     }
+
+    public function getHorarioActivo()
+{
+    return $this->hasOne(OperadorHorario::class, ['usuario_id' => 'id'])
+        ->where(['status' => '1']) // Solo el horario activo
+        ->joinWith('horario'); // Unir con la tabla `horario`
+}
+
 
     /**
      * Gets query for [[Tickets0]].
@@ -338,6 +365,20 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         $this->save(false);
     }
 
+    public function setRespuestaSeguridad($respuesta) {
+        $this->respuesta_seguridad_hash = Yii::$app->security->generatePasswordHash($respuesta);
+    }
+    
+    public function validarRespuestaSeguridad($respuesta)
+{
+    if (empty($respuesta) || empty($this->respuesta_seguridad_hash)) {
+        return false;
+    }
+
+    return Yii::$app->security->validatePassword($respuesta, $this->respuesta_seguridad_hash);
+}
+
+
 
     /**
      * {@inheritdoc}
@@ -345,6 +386,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function getId()
     {
         return $this->id;
+    }
+
+    public function getPreguntaSec(){
+        return $this->pregunta_seguridad;
     }
 
     /**
@@ -486,6 +531,8 @@ public function updatePassword($newPassword)
 
         $this->rol->nombre;
     }
+
+    
 
     public function validateAccess($seccion){
         $idRol= $this->id_rol;
